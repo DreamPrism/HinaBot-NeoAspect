@@ -68,8 +68,10 @@ namespace HinaBot_NeoAspect
             service.Event.OnClientConnect += Event_OnClientConnect;
             service.Event.OnFriendRequest += Event_OnFriendRequest;
             service.Event.OnGroupMessage += Event_OnGroupMessage;
+            //由于私信功能封号风险极大，因此停用了私信回复
             //service.Event.OnPrivateMessage += Event_OnPrivateMessage;
             service.Event.OnGroupMemberChange += Event_OnGroupMemberChange;
+            //群戳一戳，感觉没啥必要所以就没写相关的代码
             service.Event.OnGroupPoke += Event_OnGroupPoke;
             Console.WriteLine("connected to server");
             await service.StartService();
