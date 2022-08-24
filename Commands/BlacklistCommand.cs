@@ -1,0 +1,33 @@
+using HinaBot_NeoAspect.Config;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace HinaBot_NeoAspect.Commands
+{
+    public class BlacklistCommand : HashCommand<BlacklistF, string>
+    {
+        public override List<string> Alias => new List<string>
+        {
+            "/blacklist"
+        };
+
+        protected override long GetTarget(string value)
+        {
+            try
+            {
+                return long.Parse(value.Split('.')[0]);
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        protected override string Permission => "management.blacklist";
+
+        public override async Task Run(CommandArgs args)
+        {
+            await base.Run(args);
+        }
+    }
+}
