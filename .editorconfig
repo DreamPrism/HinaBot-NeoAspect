@@ -1,0 +1,7 @@
+﻿[*.cs]
+
+# IDE0022: 使用方法的程序块主体
+dotnet_diagnostic.IDE0022.severity = none
+
+# CA1416: 验证平台兼容性
+dotnet_diagnostic.CA1416.severity = none
