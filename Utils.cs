@@ -29,6 +29,15 @@ namespace HinaBot_NeoAspect
     public static class Utils
     {
         public static Random rand = new();
+        public static string ToHMS(this TimeSpan timeSpan)
+        {
+            StringBuilder sb = new();
+            if (timeSpan.TotalDays >= 1) sb.Append($"{(int)timeSpan.TotalDays}d");
+            if (timeSpan.TotalHours >= 1) sb.Append($"{(int)timeSpan.TotalHours%24}h");
+            if (timeSpan.TotalMinutes >= 1) sb.Append($"{(int)timeSpan.TotalMinutes%60}m");
+            if (timeSpan.TotalSeconds >= 1) sb.Append($"{(int)timeSpan.TotalSeconds % 60}s");
+            return sb.ToString(); 
+        }
         public static string FindAtMe(string origin, out bool isat, long qq)
         {
             var at = $"[mirai:at={qq}]";
@@ -399,6 +408,10 @@ namespace HinaBot_NeoAspect
         public static T Next<T>(this T[] arr)
         {
             return arr[rand.Next(arr.Length)];
+        }
+        public static T Next<T>(this List<T> list)
+        {
+            return list[rand.Next(list.Count)];
         }
         public static async Task<string> GetImageCodeFromBase64(string url)
         {

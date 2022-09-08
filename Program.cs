@@ -49,6 +49,16 @@ namespace HinaBot_NeoAspect
 
             Generator.Instance = new Generator("Generator");
         }
+        
+        static void Main1(string[] args)
+        {
+            if (!Directory.Exists("imagecache")) Directory.CreateDirectory("imagecache");
+            Configuration.Register<LocalDataConfiguration>();
+            Configuration.LoadAll();
+            EventTracker.GenEventCutoffsImage(170,2000);
+            Console.ReadLine();
+        }
+        
         static async Task Main(string[] args)
         {
             LoadAll();
@@ -88,8 +98,18 @@ namespace HinaBot_NeoAspect
             if (ex is IOException) return;
             Console.WriteLine(e.Exception);
         }
+        private static DateTime lastPoke = DateTime.MinValue;
         private static async ValueTask Event_OnGroupPoke(string type, GroupPokeEventArgs eventArgs)
         {
+            if ((DateTime.Now - lastPoke).TotalSeconds >= 30)
+            {
+                return;
+#pragma warning disable CS0162 // 检测到无法访问的代码
+                var reply = Configuration.GetConfig<PokeReply>().t.Next();
+                await eventArgs.SourceGroup.SendGroupMessage(Utils.GetMessageChain(reply));
+                lastPoke = DateTime.Now;
+#pragma warning restore CS0162 // 检测到无法访问的代码
+            }
         }
 
         private static async ValueTask Event_OnGroupMemberChange(string type, GroupMemberChangeEventArgs eventArgs)

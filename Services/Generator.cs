@@ -334,56 +334,6 @@ namespace HinaBot_NeoAspect.Services
             return img;
 
         }
-        public string Func(Source source, Match match)
-        {
-            var helpText = "参数:<属性> <稀有度> <乐队> [特训] [绘制高级数据] [技能描述] [技能图标] [卡面类型] [QQ号]\n属性:pure|powerful|cool|happy\n稀有度:1|2|3|4\n乐队:0-ppp|1-ag|2-hhw|3-pp|4-r|5-m|6-ras\n特训:true|false\n绘制高级数据:true|false\n技能描述:将会显示在卡面右下角\n技能图标:heal|judge|shield\n卡面类型:D|L|K(显示可能有bug)\nQQ号:用于获取头像的QQ，不填为自己\n参数之间以空格分开";
-            DateTime last;
-            if (File.Exists("last.txt")) last = DateTime.Parse(File.ReadAllText("last.txt"));
-            else last = DateTime.MinValue;
-            var sec = (DateTime.Now - last).TotalSeconds;
-            if (sec <= 60) return $"冷却中({60 - (int)sec}s)，请稍后再试哦~";
-            else
-            {
-                var splits = match.Groups[1].Value.Split(' ');
-                if (splits.Length < 3 || splits.Length > 9) return Utils.ToImageText("参数个数不对哦\n正确的" + helpText);
-
-                var attr = splits[0];
-                Attr attribute = attr switch
-                {
-                    "happy" => Attr.happy,
-                    "cool" => Attr.cool,
-                    "powerful" => Attr.powerful,
-                    "pure" => Attr.pure,
-                    _ => Attr.error
-                };
-                if (attribute == Attr.error) return "错误的属性参数";
-
-                try
-                {
-                    var rarity = byte.Parse(splits[1]);
-                    var band = byte.Parse(splits[2]);
-                    bool drawData = false, trans = false;
-                    long qq = source.FromQQ;
-                    string des = "", skType = "score", type = "";
-                    if (splits.Length > 3) trans = bool.Parse(splits[3]);
-                    if (splits.Length > 4) drawData = bool.Parse(splits[4]);
-                    if (splits.Length > 5) des = splits[5];
-                    if (splits.Length > 6) skType = splits[6];
-                    if (splits.Length > 7) type = splits[7];
-                    if (splits.Length > 8) qq = long.Parse(splits[8]);
-                    using System.Net.WebClient client = new();
-                    client.DownloadFile($"https://q.qlogo.cn/g?b=qq&nk={qq}&s=640", "origin.png");
-                    client.Dispose();
-                    File.WriteAllText("last.txt", DateTime.Now.ToString());
-                    return Utils.GetImageCode(Generator.Instance.DrawCustomCard("origin.png", attribute, rarity, band, trans, drawData, des, skType, type));
-                }
-                catch(Exception ex)
-                {
-                    File.WriteAllText("last.txt", DateTime.Now.ToString());
-                    return ex.ToString();
-                }
-            }
-        }
         public Image DrawCustomCard(string origin, Attr attribute, byte rarity, byte band, bool transformed = false, bool drawData = false, string description = "", string skillType = "score", string type = "none")
         {
             var img = new Bitmap(180, 180);
