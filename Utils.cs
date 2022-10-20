@@ -33,10 +33,10 @@ namespace HinaBot_NeoAspect
         {
             StringBuilder sb = new();
             if (timeSpan.TotalDays >= 1) sb.Append($"{(int)timeSpan.TotalDays}d");
-            if (timeSpan.TotalHours >= 1) sb.Append($"{(int)timeSpan.TotalHours%24}h");
-            if (timeSpan.TotalMinutes >= 1) sb.Append($"{(int)timeSpan.TotalMinutes%60}m");
+            if (timeSpan.TotalHours >= 1) sb.Append($"{(int)timeSpan.TotalHours % 24}h");
+            if (timeSpan.TotalMinutes >= 1) sb.Append($"{(int)timeSpan.TotalMinutes % 60}m");
             if (timeSpan.TotalSeconds >= 1) sb.Append($"{(int)timeSpan.TotalSeconds % 60}s");
-            return sb.ToString(); 
+            return sb.ToString();
         }
         public static string FindAtMe(string origin, out bool isat, long qq)
         {
@@ -200,7 +200,7 @@ namespace HinaBot_NeoAspect
                 case At at:
                     return $"[mirai:at={at.Traget}]";
                 case Sora.Entities.CQCodes.CQCodeModel.Image img:
-                    return $"[mirai:imagenew={img.ImgFile}]";
+                    return $"[CQ:image,file={img.ImgFile}]";
                 case Poke poke:
                     return $"[mirai:poke={poke.Uid}]";
                 case Code code:
@@ -359,7 +359,7 @@ namespace HinaBot_NeoAspect
                 return null;
             }
         }
-        public  static JObject GetHttp(string uri,int timeout = 5)
+        public static JObject GetHttp(string uri, int timeout = 5)
         {
             try
             {
