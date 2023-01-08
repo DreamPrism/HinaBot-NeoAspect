@@ -10,8 +10,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Sora.Entities;
-using Sora.Entities.CQCodes;
 using Sora.Enumeration.EventParamsType;
+using Sora.Entities.Segment;
+using Sora.Util;
+using Sora.Enumeration.ApiType;
 
 namespace HinaBot_NeoAspect.Handler
 {
@@ -157,12 +159,17 @@ namespace HinaBot_NeoAspect.Handler
             {
                 try
                 {
-                    Utils.Log(LoggerLevel.Debug, $"[{Sender.FromGroup}::{ Sender.FromQQ}] [{ (DateTime.Now.Ticks - ticks) / 10000}ms] sent msg: " + s);
+                    Utils.Log(LoggerLevel.Debug, $"[{Sender.FromGroup}::{Sender.FromQQ}] [{(DateTime.Now.Ticks - ticks) / 10000}ms] sent msg: " + s);
                     if (Sender.FromGroup != 0)
-                        await session.SendGroupMessage(Sender.FromGroup, Utils.GetMessageChain(s));
+                    {
+                        var (apiStatus, messageId) = await session.SendGroupMessage(Sender.FromGroup, Utils.GetMessageChain(s));
+                        if (apiStatus.RetCode == ApiStatusType.TimeOut) Program.needRestart = true;
+                    }
                     else
-                        await session.SendPrivateMessage(Sender.FromQQ, Utils.GetMessageChain(s));
-
+                    {
+                        var (apiStatus, messageId) = await session.SendPrivateMessage(Sender.FromQQ, Utils.GetMessageChain(s));
+                        if (apiStatus.RetCode == ApiStatusType.TimeOut) Program.needRestart = true;
+                    }
                 }
                 catch (Exception e)
                 {

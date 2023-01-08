@@ -102,9 +102,11 @@ namespace HinaBot_NeoAspect.Handler
                 return m.Value;
             });
 
+        public static long selfId = -1;
         public async Task<bool> OnMessage(HandlerArgs args)
         {
-            var raw = Utils.FindAtMe(args.message, out var isme, args.Sender.Session.GetLoginUserId()).Trim();
+            if (selfId == -1) return false;
+            var raw = Utils.FindAtMe(args.message, out var isme, selfId).Trim();
             var isadmin = await args.Sender.HasPermission("*", -1);
 
             if (!GetConfig<Whitelist>().hash.Contains(args.Sender.FromGroup) && !isadmin)

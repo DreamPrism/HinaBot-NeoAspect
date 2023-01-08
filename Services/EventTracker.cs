@@ -11,6 +11,8 @@ using Microsoft.CodeAnalysis.Operations;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using SkiaSharp;
+using Sora.Entities.Segment;
+using Sora.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Tracing;
@@ -71,7 +73,7 @@ namespace HinaBot_NeoAspect.Services
             if (int.TryParse(match.Groups[1].Value, out int id) && int.TryParse(match.Groups[2].Value, out int tier) && EventTracker.GenEventCutoffsImage(id, tier))
             {
                 var path = Path.Combine("imagecache", "chart.jpg");
-                return $"[mirai:imagepath={path}]";
+                return CQCodeUtil.SerializeSegment(SoraSegment.Image(path));
             }
             else
             {

@@ -4,11 +4,11 @@ using HinaBot_NeoAspect.Models;
 using Newtonsoft.Json.Linq;
 using Sora.Entities;
 using Sora.Entities.Base;
-using Sora.Entities.CQCodes;
-using Sora.Entities.CQCodes.CQCodeModel;
 using Sora.Entities.Info;
 using Sora.Enumeration;
 using Sora.Enumeration.EventParamsType;
+using Sora.Entities.Segment;
+using Sora.Entities.Segment.DataModel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,6 +23,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using GroupMemberInfo = HinaBot_NeoAspect.Models.GroupMemberInfo;
 using Image = System.Drawing.Image;
+using Sora.Util;
 
 namespace HinaBot_NeoAspect
 {
@@ -40,7 +41,12 @@ namespace HinaBot_NeoAspect
         }
         public static string FindAtMe(string origin, out bool isat, long qq)
         {
-            var at = $"[mirai:at={qq}]";
+            if (qq == -1)
+            {
+                isat = false;
+                return origin;
+            }
+            var at = CQCodeUtil.SerializeSegment(SoraSegment.At(qq));
             isat = origin.Contains(at);
             return origin.Replace(at, "");
         }
@@ -114,39 +120,40 @@ namespace HinaBot_NeoAspect
             return imgcode[1..37].Replace("-", "").ToLower() + ".image";
         }
 
-        public static List<CQCode> GetMessageChain(string msg)
+        public static MessageBody GetMessageChain(string msg)
         {
-            Match match;
-            List<CQCode> result = new List<CQCode>();
+            return CQCodeUtil.DeserializeMessage(msg.Decode()) ?? new();
+            /*Match match;
+            List<SoraSegment> result = new List<SoraSegment>();
 
             while ((match = codeReg.Match(msg)).Success)
             {
                 if (!string.IsNullOrEmpty(match.Groups[1].Value))
-                    result.Add(CQCode.CQText(match.Groups[1].Value.Decode()));
+                    result.Add(SoraSegment.Text(match.Groups[1].Value.Decode()));
                 var val = match.Groups[3].Value;
                 switch (match.Groups[2].Value)
                 {
-                    case "mirai:at": result.Add(CQCode.CQAt(long.Parse(val))); break;
-                    case "mirai:imageid": result.Add(CQCode.CQImage(val.Decode().FixImage(), false)); break;
-                    case "mirai:imageurl": result.Add(CQCode.CQImage(val.Decode())); break;
-                    case "mirai:imagepath": result.Add(CQCode.CQImage(val.Decode())); break;
-                    case "mirai:imagenew": result.Add(CQCode.CQImage(val.Decode())); break;
-                    case "mirai:atall": result.Add(CQCode.CQAtAll()); break;
-                    case "mirai:json": result.Add(CQCode.CQJson(val.Decode())); break;
-                    case "mirai:xml": result.Add(CQCode.CQXml(val.Decode())); break;
-                    case "mirai:poke": result.Add(CQCode.CQPoke(long.Parse(val))); break;
-                    case "mirai:face": result.Add(CQCode.CQFace(int.Parse(val))); break;
-                    case "CQ:at,qq": result.Add(CQCode.CQAt(long.Parse(val))); break;
-                    case "CQ:face,id": result.Add(CQCode.CQFace(int.Parse(val))); break;
-                    case "CQ:image,file": result.Add(CQCode.CQImage(val.Decode())); break;
-                    default: result.Add(CQCode.CQText($"[{match.Groups[2].Value}={match.Groups[3].Value}]")); break;
+                    case "mirai:at": result.Add(SoraSegment.At(long.Parse(val))); break;
+                    case "mirai:imageid": result.Add(SoraSegment.Image(val.Decode().FixImage(), false)); break;
+                    case "mirai:imageurl": result.Add(SoraSegment.Image(val.Decode())); break;
+                    case "mirai:imagepath": result.Add(SoraSegment.Image(val.Decode())); break;
+                    case "mirai:imagenew": result.Add(SoraSegment.Image(val.Decode())); break;
+                    case "mirai:atall": result.Add(SoraSegment.AtAll()); break;
+                    case "mirai:json": result.Add(SoraSegment.Json(val.Decode())); break;
+                    case "mirai:xml": result.Add(SoraSegment.Xml(val.Decode())); break;
+                    case "mirai:poke": result.Add(SoraSegment.Poke(long.Parse(val))); break;
+                    case "mirai:face": result.Add(SoraSegment.Face(int.Parse(val))); break;
+                    case "CQ:at,qq": result.Add(SoraSegment.At(long.Parse(val))); break;
+                    case "CQ:face,id": result.Add(SoraSegment.Face(int.Parse(val))); break;
+                    case "CQ:image,file": result.Add(SoraSegment.Image(val.Decode())); break;
+                    default: result.Add(SoraSegment.Text($"[{match.Groups[2].Value}={match.Groups[3].Value}]")); break;
                 }
                 msg = match.Groups[4].Value;
             }
 
-            if (!string.IsNullOrEmpty(msg)) result.Add(CQCode.CQText(msg.Decode()));
+            if (!string.IsNullOrEmpty(msg)) result.Add(SoraSegment.Text(msg.Decode()));
 
-            return result.ToList();
+            return result.ToList();*/
         }
         public static string FixRegex(string origin)
         {
@@ -174,9 +181,10 @@ namespace HinaBot_NeoAspect
         public static async Task<string> GetName(this Source source)
             => await source.Session.GetName(source.FromGroup, source.FromQQ);
 
-        internal static string GetCQMessage(Message chain)
+        internal static string GetCQMessage(MessageBody chain)
         {
-            return string.Concat(chain.MessageList.Select(msg => GetCQMessage(msg)));
+            var msg = chain.SerializeMessage().Decode();
+            return msg;
         }
 
         public static string Encode(this string str)
@@ -188,38 +196,11 @@ namespace HinaBot_NeoAspect
         {
             return str.Replace("&#91;", "[").Replace("&#93;", "]").Replace("&amp;", "&");
         }
-
-        private static string GetCQMessage(CQCode msg)
-        {
-            switch (msg.CQData)
-            {
-                case Face face:
-                    return $"[mirai:face={face.Id}]";
-                case Text plain:
-                    return plain.Content.Encode();
-                case At at:
-                    return $"[mirai:at={at.Traget}]";
-                case Sora.Entities.CQCodes.CQCodeModel.Image img:
-                    return $"[CQ:image,file={img.ImgFile}]";
-                case Poke poke:
-                    return $"[mirai:poke={poke.Uid}]";
-                case Code code:
-                    switch (msg.Function)
-                    {
-                        case CQFunction.Json: return $"[mirai:json={code.Content}]";
-                        case CQFunction.Xml: return $"[mirai:xml={code.Content}]";
-                        default: return "";
-                    }
-                default:
-                    return "";//msg.ToString().Encode();
-            }
-        }
-
         public static string GetImageCode(byte[] img)
         {
             var path = Path.Combine("imagecache", $"cache{rand.Next()}.jpg");
             File.WriteAllBytes(path, img);
-            return $"[mirai:imagepath={path}]";
+            return CQCodeUtil.SerializeSegment(SoraSegment.Image(path));
         }
 
         public static Image Resize(this Image img, float scale)
@@ -239,7 +220,7 @@ namespace HinaBot_NeoAspect
         {
             var path = Path.Combine("imagecache", $"cache{rand.Next()}.jpg");
             img.Save(path);
-            return $"[mirai:imagepath={Path.GetFullPath(path)}]";
+            return CQCodeUtil.SerializeSegment(SoraSegment.Image(path));
         }
         public static Image GetImageFromBase64(string base64)
         {

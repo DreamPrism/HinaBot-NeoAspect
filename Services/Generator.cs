@@ -4,6 +4,8 @@ using HinaBot_NeoAspect.Models;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Sora.Entities.Segment;
+using Sora.Util;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -182,7 +184,9 @@ namespace HinaBot_NeoAspect.Services
             {
                 tasks.Add(Task.Run(() =>
                 {
+#pragma warning disable SYSLIB0014 // 类型或成员已过时
                     var client = new WebClient();
+#pragma warning restore SYSLIB0014 // 类型或成员已过时
                     Console.WriteLine($"Downloading: {kvp.Item2}");
                     try
                     {
@@ -273,7 +277,7 @@ namespace HinaBot_NeoAspect.Services
                 var img = GenerateCard(cardId, transformed, drawData);
                 img.Save(cardPath);
             }
-            return $"[mirai:imagepath={Path.GetFullPath(cardPath)}]";
+            return CQCodeUtil.SerializeSegment(SoraSegment.Image(Path.GetFullPath(cardPath)));
         }
         public Image GenerateCard(CardInfo cardInfo, bool transformed = false, bool drawData = true)
         {
